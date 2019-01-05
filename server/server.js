@@ -52,14 +52,14 @@ app.post('/api/users/login', (req, res) => {
   User.findOne({ email: req.body.email }, (err, user) => {
     if (!user) {
       return res.json({
-        loginSucess: false,
+        loginSuccess: false,
         message: 'Auth failed, email not found',
       });
     }
 
     user.comparePassword(req.body.password, (err, isMatch) => {
       if (!isMatch) {
-        return res.json({ loginSucess: false, message: 'Wrong password' });
+        return res.json({ loginSuccess: false, message: 'Wrong password' });
       }
 
       user.generateToken((err, user) => {
@@ -71,15 +71,23 @@ app.post('/api/users/login', (req, res) => {
           .cookie('w_auth', user.token)
           .status(200)
           .json({
-            loginSucess: true,
+            loginSuccess: true,
           });
       });
     });
   });
 });
 
-const port = process.env.PORT || 3002;
+app.get('/api/user/logout', auth, (req, res) => {
+  User.findOneAndUpdate({ _id: req.user._id }, { token: '' }, (err, doc) => {
+    if (err) {
+      return res.json({ success: false, err });
+    }
+    return res.status(200).send({ success: true });
+  });
+});
 
+const port = process.env.PORT || 3002;
 app.listen(port, () => {
   console.log(`Server running at ${port}`);
 });
